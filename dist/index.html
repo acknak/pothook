@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="ja" data-theme="emerald">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pothook</title>
+    <script type="module" crossorigin src="/assets/index-zoX8ChQs.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-0uoXAHhu.css">
+  </head>
+  <body class="overflow-hidden font-sans">
+    <div class="container flex flex-col md:flex-row gap-4 h-screen mx-auto py-4">
+      <form
+        class="form-control flex flex-col basis-full gap-2 md:h-full px-2 overflow-y-auto rounded border border-base-300 bg-base-100 shadow-lg"
+        id="params-form"
+      >
+        <label class="w-full">
+          <div class="label">
+            <span class="label-text">映像・音声</span>
+          </div>
+          <input id="voice-path" class="input input-bordered input-sm w-full cursor-pointer text-slate-400" placeholder="ファイルを選択..." readonly />
+          <audio controls id="voice-audio" class="w-full mt-2 hidden" src="https://upload.wikimedia.org/wikipedia/commons/6/68/Uguisu5740_cu.ogg"></audio>
+        </label>
+        <div id="dual-range-slider" class="range_container flex-col w-full mx-auto hidden">
+          <div class="label mb-2">
+            <span class="label-text">文字起こし範囲</span>
+          </div>
+          <div class="sliders_control relative">
+            <input id="fromSlider" type="range" value="0" min="0" max="1000" />
+            <input id="toSlider" type="range" value="1000" min="0" max="1000" />
+          </div>
+          <div class="form_control relative flex justify-between mt-4 label-text">
+            <div class="form_control_container ps-1">
+              <p>開始<input id="fromInput" class="w-16 text-right" value="00:00:00" min="0" max="1000" readonly /></p>
+            </div>
+            <div class="form_control_container pe-1">
+              <p>終了<input id="toInput" class="w-16 pe-1 text-right" value="00:00:00" min="0" max="1000" readonly /></p>
+            </div>
+          </div>
+        </div>
+        <label class="w-full">
+          <div class="label">
+            <span class="label-text">言語モデル</span>
+          </div>
+          <input id="model-path" class="input input-bordered input-sm w-full cursor-pointer text-slate-400" placeholder="ファイルを選択..." readonly />
+        </label>
+        <div class="flex align-bottom items-end">
+          <label class="form-control w-32">
+            <div class="label">
+              <span class="label-text">音声の言語</span>
+            </div>
+            <select id="lang" class="select select-bordered select-sm">
+              <option value="ja" selected>日本語</option>
+              <option value="en">English</option>
+              <option value="es">Español</option>
+              <option value="fr">Français</option>
+              <option value="pt">Português</option>
+              <option value="de">Deutsch</option>
+              <option value="ko">한국어</option>
+              <option value="it">Italiano</option>
+            </select>
+          </label>
+          <label class="label flex align-middle cursor-pointer w-52 ms-4 mb-1 p-0">
+            <input id="translate" type="checkbox" class="toggle" />
+            <span class="label-text">英語に翻訳して書き起こす</span>
+          </label>
+        </div>
+        <button id="call-whisper" class="mt-auto mb-2 btn btn-sm border-gray-300" disabled>文字起こし開始</button>
+      </form>
+      <form class="flex flex-col basis-full gap-2 md:h-full">
+        <label class="form-control w-full">
+          <div class="label">
+            <span class="label-text w-28">システム情報</span>
+            <progress id="progress" class="progress progress-success w-full my-2" value="0" max="100"></progress>
+          </div>
+          <textarea
+            id="output-sys"
+            class="textarea w-full h-16 mb-2 resize-none textarea-bordered textarea-xs border border-base-300 bg-base-100 font-mono"
+            placeholder="ここにシステム情報が出力されます"
+            wrap="off"
+            readonly
+          ></textarea>
+        </label>
+        <textarea
+          id="output-msg"
+          class="textarea w-full h-full resize-none textarea-bordered textarea-xs border border-base-300 bg-base-100 shadow-lg font-mono"
+          placeholder="ここに解析結果が出力されます"
+          wrap="off"
+          readonly
+        ></textarea>
+        <div class="form-control flex flex-row gap-4 justify-around items-center">
+          <label class="label cursor-pointer w-32">
+            <span class="label-text">編集モード</span>
+            <input id="edit-msg" type="checkbox" class="toggle" />
+          </label>
+          <label class="label cursor-pointer w-36">
+            <span class="label-text">クリック再生</span>
+            <input id="autoplay" type="checkbox" class="toggle" checked />
+          </label>
+          <button id="copy-msg" class="btn btn-sm border border-gray-300" disabled>解析結果をコピー</button>
+        </div>
+      </form>
+    </div>
+  </body>
+</html>

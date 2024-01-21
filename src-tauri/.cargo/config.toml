@@ -1,0 +1,9 @@
+# building flags for whisper-rs
+# https://github.com/tazz4843/whisper-rs/blob/master/BUILDING.md
+
+[target.aarch64-apple-darwin]
+rustflags = "-lc++ -l framework=Accelerate"
+
+[target.x86_64-pc-windows-gnu]
+linker = "C:\\msys64\\ucrt64\\bin\\gcc.exe"
+ar = "C:\\msys64\\ucrt64\\bin\\ar.exe"
