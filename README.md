@@ -3,10 +3,10 @@
 <image src="https://raw.githubusercontent.com/acknak/pothook/main/src-tauri/icons/pothook_circle.png" height=192 width=192>
 
 # Pothook
-This is a GUI application for transcribing text using Whisper.cpp with Typescript and Rust (Tauri).  
+This is a GUI application for transcribing text using [Whisper.cpp](https://github.com/ggerganov/whisper.cpp) with Typescript and Rust ([Tauri](https://tauri.app)).  
 It works on Windows, Mac, and Linux platforms. 🚀
 
-[![][release]][release-url] [![][build]][build-url] [![][license]][license-url]
+[![release](https://img.shields.io/github/v/release/acknak/pothook.svg?style=flat)](https://github.com/acknak/pothook/releases) [![workflow](https://github.com/acknak/pothook/actions/workflows/main.yaml/badge.svg)](https://github.com/acknak/pothook/actions/workflows/main.yaml) [![license](https://badgen.net/github/license/acknak/pothook)](https://github.com/acknak/pothook/blob/main/LICENSE)
 
 </div>
 
@@ -34,10 +34,3 @@ git clone https://github.com/acknak/pothook.git
 cd pothook
 npm run tauri dev
 ```
-
-[release]: https://badgen.net/github/release/acknak/pothook
-[release-url]: https://github.com/acknak/pothook/releases
-[build]: https://badgen.net/github/checks/acknak/pothook?label=build
-[build-url]: https://github.com/acknak/pothook/actions
-[license]: https://badgen.net/github/license/acknak/pothook
-[license-url]: https://github.com/acknak/pothook/blob/main/LICENSE
