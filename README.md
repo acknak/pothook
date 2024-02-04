@@ -2,7 +2,7 @@
 
 <image src="https://raw.githubusercontent.com/acknak/pothook/main/src-tauri/icons/pothook_circle.png" height=192 width=192>
 
-**Pothook**  
+# Pothook
 This is a GUI application for transcribing text using Whisper.cpp with Typescript and Rust (Tauri).  
 It works on Windows, Mac, and Linux platforms. 🚀
 
