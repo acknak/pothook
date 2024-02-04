@@ -2,8 +2,9 @@
 
 <image src="https://raw.githubusercontent.com/acknak/pothook/main/src-tauri/icons/pothook_circle.png" height=192 width=192>
 
-**GUI application for transcribing text using Whisper.cpp  
-with Typescript and Rust (Tauri)**
+**Pothook**  
+This is a GUI application for transcribing text using Whisper.cpp with Typescript and Rust (Tauri).  
+It works on Windows, Mac, and Linux platforms. 🚀
 
 [![][release]][release-url] [![][build]][build-url] [![][license]][license-url]
 
@@ -13,10 +14,9 @@ with Typescript and Rust (Tauri)**
 
 1. Download Pothook from [Releases page](https://github.com/acknak/pothook/releases/) :arrow_down:
 2. Download the [Whisper C++ model of ggml format](https://huggingface.co/ggerganov/whisper.cpp/tree/main) :file_folder:  
-   :memo: If there is no specific reason, I recommend using the Large v3 model.
+   :memo: If there is no specific reason, I recommend using the Large v3 model (ggml-large-v3.bin).
 3. Run Pothook :computer:  
    ![Pothook GUI Image](https://raw.githubusercontent.com/acknak/pothook/main/Pothook.png)
-
 Hint: If you want to learn more about the details and specifications of the ggml models, please check out the [Whisper C++ documentation page](https://github.com/ggerganov/whisper.cpp/tree/master/models#whisper-model-files-in-custom-ggml-format) :book:
 
 # Run Pothook as dev mode :wrench:
