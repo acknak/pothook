@@ -329,8 +329,10 @@ window.addEventListener("DOMContentLoaded", () => {
       if (outputMsgEl && callWhisperBtnEl && copyMsgButtonEl) {
         const start = outputMsgEl.selectionStart;
         const end = outputMsgEl.selectionEnd;
+        const top = outputMsgEl.scrollTop;
         outputMsgEl.value = whisper.outputText();
         outputMsgEl.setSelectionRange(start, end);
+        outputMsgEl.scrollTop = top;
         copyMsgButtonEl.disabled = false;
       }
       if (progressEl && voiceAudioEl && fromSlider && toSlider) {
