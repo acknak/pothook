@@ -60,6 +60,8 @@ pub async fn run(
     params.set_offset_ms(offset_ms);
     params.set_duration_ms(duration_ms);
     params.set_tdrz_enable(true);
+    params.set_suppress_non_speech_tokens(true);
+    params.set_max_initial_ts(3.);
     unsafe {
         params.set_new_segment_callback(Some(whisper_callback));
         params.set_new_segment_callback_user_data(Box::into_raw(Box::new(app.clone())) as *mut c_void);
