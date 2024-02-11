@@ -2,7 +2,14 @@ import { open, ask, save, message } from "@tauri-apps/api/dialog";
 import { listen } from "@tauri-apps/api/event";
 import { convertFileSrc, invoke } from "@tauri-apps/api/tauri";
 import { Whisper, WhisperPayload } from "./whisper";
-import { controlToSlider, controlFromSlider, getTime, fillSlider, setToggleAccessible, getParsed } from "./dual_range_slider";
+import {
+  controlToSlider,
+  controlFromSlider,
+  getTime,
+  fillSlider,
+  setToggleAccessible,
+  getParsed,
+} from "./dual_range_slider";
 
 let whisper = new Whisper();
 let outputMsgEl: HTMLTextAreaElement | null;
@@ -67,33 +74,55 @@ window.addEventListener("DOMContentLoaded", () => {
     };
   }
 
-  document.querySelector("#params-form")?.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    if (!voiceInputEl || voiceInputEl?.value === "") {
-      await message("映像・音声ファイルを指定してください", { title: "Pothook", type: "error" });
-      return;
-    }
-    if (!modelInputEl || modelInputEl?.value === "") {
-      await message("言語モデルファイルを指定してください", { title: "Pothook", type: "error" });
-      return;
-    }
-    if (outputMsgEl && callWhisperBtnEl && copyMsgButtonEl && voiceAudioEl && outputSysEl && progressEl) {
-      callWhisperBtnEl.disabled = true;
-      copyMsgButtonEl.disabled = true;
-      outputMsgEl.value = "";
-      outputSysEl.value = (outputSysEl.value === "" ? "" : outputSysEl.value + "\n") + "[" + new Date().toLocaleString("ja-JP") + "] 初期設定中...";
-      outputSysEl.scrollTo(0, outputSysEl.scrollHeight);
-      progressEl.classList.remove("progress-error");
-      progressEl.removeAttribute("value");
-      progressEl.removeAttribute("max");
-      if (await whisper.callWhisper()) {
-        outputSysEl.value =
-          (outputSysEl.value === "" ? "" : outputSysEl.value + "\n") + "[" + new Date().toLocaleString("ja-JP") + "] 文字起こしが完了しました";
-        outputSysEl.scrollTo(0, outputSysEl.scrollHeight);
-        callWhisperBtnEl.disabled = false;
+  document
+    .querySelector("#params-form")
+    ?.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (!voiceInputEl || voiceInputEl?.value === "") {
+        await message("映像・音声ファイルを指定してください", {
+          title: "Pothook",
+          type: "error",
+        });
+        return;
       }
-    }
-  });
+      if (!modelInputEl || modelInputEl?.value === "") {
+        await message("言語モデルファイルを指定してください", {
+          title: "Pothook",
+          type: "error",
+        });
+        return;
+      }
+      if (
+        outputMsgEl &&
+        callWhisperBtnEl &&
+        copyMsgButtonEl &&
+        voiceAudioEl &&
+        outputSysEl &&
+        progressEl
+      ) {
+        callWhisperBtnEl.disabled = true;
+        copyMsgButtonEl.disabled = true;
+        outputMsgEl.value = "";
+        outputSysEl.value =
+          (outputSysEl.value === "" ? "" : outputSysEl.value + "\n") +
+          "[" +
+          new Date().toLocaleString("ja-JP") +
+          "] 初期設定中...";
+        outputSysEl.scrollTo(0, outputSysEl.scrollHeight);
+        progressEl.classList.remove("progress-error");
+        progressEl.removeAttribute("value");
+        progressEl.removeAttribute("max");
+        if (await whisper.callWhisper()) {
+          outputSysEl.value =
+            (outputSysEl.value === "" ? "" : outputSysEl.value + "\n") +
+            "[" +
+            new Date().toLocaleString("ja-JP") +
+            "] 文字起こしが完了しました";
+          outputSysEl.scrollTo(0, outputSysEl.scrollHeight);
+          callWhisperBtnEl.disabled = false;
+        }
+      }
+    });
   outputMsgEl?.addEventListener("keydown", (e) => {
     if (e.isComposing || outputMsgEl?.readOnly) {
       return;
@@ -106,13 +135,17 @@ window.addEventListener("DOMContentLoaded", () => {
   outputMsgEl?.addEventListener("paste", (e) => {
     e.preventDefault();
     if (!outputMsgEl?.readOnly) {
-      outputMsgEl?.setRangeText((e.clipboardData?.getData("text") ?? "").replace(/\r?\n/g, ""));
+      outputMsgEl?.setRangeText(
+        (e.clipboardData?.getData("text") ?? "").replace(/\r?\n/g, "")
+      );
     }
   });
   outputMsgEl?.addEventListener("keyup", (e) => {
     e.preventDefault();
     if (outputMsgEl && !outputMsgEl.readOnly) {
-      if ((outputMsgEl.value.match(/\r?\n/g) || []).length == whisper.numOutputs()) {
+      if (
+        (outputMsgEl.value.match(/\r?\n/g) || []).length == whisper.numOutputs()
+      ) {
         whisper.editOutputs(outputMsgEl.value);
       }
       outputMsgEl.value = whisper.outputText();
@@ -120,7 +153,11 @@ window.addEventListener("DOMContentLoaded", () => {
   });
   outputMsgEl?.addEventListener("click", (e) => {
     if (autoplayInputEl?.checked && whisper.numOutputs() > 0 && voiceAudioEl) {
-      const numOutput = (outputMsgEl?.value.substring(0, outputMsgEl?.selectionStart).match(/\r?\n/g) || []).length;
+      const numOutput = (
+        outputMsgEl?.value
+          .substring(0, outputMsgEl?.selectionStart)
+          .match(/\r?\n/g) || []
+      ).length;
       if (playingOutputNum == numOutput) {
         return;
       }
@@ -140,7 +177,14 @@ window.addEventListener("DOMContentLoaded", () => {
   });
   voiceInputEl?.addEventListener("click", async (e) => {
     e.preventDefault();
-    if (voiceInputEl && callWhisperBtnEl && copyMsgButtonEl && outputMsgEl && voiceAudioEl && dualRngSliderEl) {
+    if (
+      voiceInputEl &&
+      callWhisperBtnEl &&
+      copyMsgButtonEl &&
+      outputMsgEl &&
+      voiceAudioEl &&
+      dualRngSliderEl
+    ) {
       voiceInputEl.disabled = true;
       const path = await open({
         directory: false,
@@ -160,10 +204,19 @@ window.addEventListener("DOMContentLoaded", () => {
         try {
           await invoke("check_wav", { pathToWav: voiceInputEl.value });
         } catch (res) {
-          if (await ask("指定されたファイルは解析可能な映像・音声ファイルではありませんでした。解析用に変換しますか？")) {
-            let filePath = await save({ filters: [{ name: "voices", extensions: ["wav"] }] });
+          if (
+            await ask(
+              "指定されたファイルは解析可能な映像・音声ファイルではありませんでした。解析用に変換しますか？"
+            )
+          ) {
+            let filePath = await save({
+              filters: [{ name: "voices", extensions: ["wav"] }],
+            });
             if (!filePath) return;
-            await invoke("audio_conv", { pathToMedia: voiceInputEl.value, pathToWav: filePath });
+            await invoke("audio_conv", {
+              pathToMedia: voiceInputEl.value,
+              pathToWav: filePath,
+            });
             voiceAudioEl.src = convertFileSrc(filePath);
             voiceInputEl.value = filePath;
           } else {
@@ -187,7 +240,11 @@ window.addEventListener("DOMContentLoaded", () => {
         whisper = new Whisper();
         whisper.pathToWav = voiceInputEl.value;
         if (outputSysEl && progressEl) {
-          outputSysEl.value = (outputSysEl.value === "" ? "" : outputSysEl.value + "\n") + "[" + new Date().toLocaleString("ja-JP") + "] 音声を読み込みました";
+          outputSysEl.value =
+            (outputSysEl.value === "" ? "" : outputSysEl.value + "\n") +
+            "[" +
+            new Date().toLocaleString("ja-JP") +
+            "] 音声を読み込みました";
           outputSysEl.scrollTo(0, outputSysEl.scrollHeight);
           progressEl.classList.remove("progress-error");
           progressEl.value = 100;
@@ -216,7 +273,9 @@ window.addEventListener("DOMContentLoaded", () => {
           },
         ],
       });
-      modelInputEl.value = Array.isArray(path) ? path[0] : path ?? modelInputEl.value;
+      modelInputEl.value = Array.isArray(path)
+        ? path[0]
+        : path ?? modelInputEl.value;
       whisper.pathToModel = modelInputEl.value;
     }
   });
@@ -246,7 +305,11 @@ window.addEventListener("DOMContentLoaded", () => {
     if (event.payload.status === "error" || event.payload.status === "start") {
       if (outputSysEl && progressEl) {
         outputSysEl.value =
-          (outputSysEl.value === "" ? "" : outputSysEl.value + "\n") + "[" + new Date().toLocaleString("ja-JP") + "] " + event.payload.message;
+          (outputSysEl.value === "" ? "" : outputSysEl.value + "\n") +
+          "[" +
+          new Date().toLocaleString("ja-JP") +
+          "] " +
+          event.payload.message;
         outputSysEl.scrollTo(0, outputSysEl.scrollHeight);
         if (event.payload.status === "error") {
           progressEl.classList.add("progress-error");
@@ -255,18 +318,31 @@ window.addEventListener("DOMContentLoaded", () => {
       }
     } else {
       if (whisper.numOutputs() == 0 && outputSysEl && progressEl) {
-        outputSysEl.value = (outputSysEl.value === "" ? "" : outputSysEl.value + "\n") + "[" + new Date().toLocaleString("ja-JP") + "] 文字起こし中...";
+        outputSysEl.value =
+          (outputSysEl.value === "" ? "" : outputSysEl.value + "\n") +
+          "[" +
+          new Date().toLocaleString("ja-JP") +
+          "] 文字起こし中...";
         outputSysEl.scrollTo(0, outputSysEl.scrollHeight);
       }
       whisper.push(event.payload);
       if (outputMsgEl && callWhisperBtnEl && copyMsgButtonEl) {
+        const start = outputMsgEl.selectionStart;
+        const end = outputMsgEl.selectionEnd;
         outputMsgEl.value = whisper.outputText();
+        outputMsgEl.setSelectionRange(start, end);
         copyMsgButtonEl.disabled = false;
       }
       if (progressEl && voiceAudioEl && fromSlider && toSlider) {
-        const all_length_ms = (parseInt(toSlider.value) - parseInt(fromSlider.value)) * voiceAudioEl.duration;
+        const all_length_ms =
+          (parseInt(toSlider.value) - parseInt(fromSlider.value)) *
+          voiceAudioEl.duration;
         progressEl.classList.remove("progress-error");
-        progressEl.value = ((event.payload.end_ms - parseInt(fromSlider.value) * voiceAudioEl.duration) / all_length_ms) * 100;
+        progressEl.value =
+          ((event.payload.end_ms -
+            parseInt(fromSlider.value) * voiceAudioEl.duration) /
+            all_length_ms) *
+          100;
         progressEl.setAttribute("max", "100");
       }
     }
@@ -285,7 +361,11 @@ export type AudioConvPayload = {
     if (outputSysEl && progressEl && voiceAudioEl) {
       if (event.payload.message !== "") {
         outputSysEl.value =
-          (outputSysEl.value === "" ? "" : outputSysEl.value + "\n") + "[" + new Date().toLocaleString("ja-JP") + "] " + event.payload.message;
+          (outputSysEl.value === "" ? "" : outputSysEl.value + "\n") +
+          "[" +
+          new Date().toLocaleString("ja-JP") +
+          "] " +
+          event.payload.message;
         outputSysEl.scrollTo(0, outputSysEl.scrollHeight);
       }
       if (event.payload.status === "error") {
