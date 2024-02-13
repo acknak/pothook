@@ -31,6 +31,7 @@ whisper-rs = "0.10"
 whisper-rs-sys = "0.8"
 symphonia = { version = "0.5", features = ["all"] }
 rubato = "0.14"
+once_cell = "1.19.0"
 
 # for windows (cross compile from mac_os)
 # cargo tauri build --target x86_64-pc-windows-msvc --runner cargo-xwin

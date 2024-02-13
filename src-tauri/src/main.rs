@@ -5,6 +5,7 @@ use hound::{SampleFormat, WavSpec};
 use tauri::Manager;
 
 mod audio_conv;
+mod store;
 mod whisper;
 
 #[tauri::command]
@@ -55,7 +56,7 @@ async fn whisper(
         translate,
         offset_ms,
         duration_ms,
-        app,
+        &app,
     )
     .await
 }

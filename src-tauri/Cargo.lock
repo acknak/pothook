@@ -2079,6 +2079,7 @@ version = "0.1.1"
 dependencies = [
  "hound",
  "libc",
+ "once_cell",
  "rubato",
  "serde",
  "serde_json",

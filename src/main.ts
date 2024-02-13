@@ -148,7 +148,6 @@ window.addEventListener("DOMContentLoaded", () => {
       ) {
         whisper.editOutputs(outputMsgEl.value);
       }
-      outputMsgEl.value = whisper.outputText();
     }
   });
   outputMsgEl?.addEventListener("click", (e) => {
@@ -256,8 +255,9 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   });
   voiceAudioEl?.addEventListener("canplaythrough", () => {
-    if (toInput) {
+    if (toInput && voiceAudioEl) {
       toInput.value = getTime(1000);
+      whisper.end_sec = voiceAudioEl.duration;
     }
   });
   modelInputEl?.addEventListener("click", async (e) => {
@@ -288,7 +288,6 @@ window.addEventListener("DOMContentLoaded", () => {
   editMsgInputEl?.addEventListener("change", (_) => {
     whisper.clock = !(editMsgInputEl?.checked ?? false);
     if (outputMsgEl) {
-      outputMsgEl.value = whisper.outputText();
       outputMsgEl.readOnly = whisper.clock || whisper.numOutputs() == 0;
     }
   });
@@ -299,6 +298,29 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   });
 });
+
+(async () => {
+  await listen<string>("data", (event) => {
+    if (outputMsgEl) {
+      const start = outputMsgEl.selectionStart;
+      const end = outputMsgEl.selectionEnd;
+      const top = outputMsgEl.scrollTop;
+      outputMsgEl.value = event.payload;
+      outputMsgEl.setSelectionRange(start, end);
+      outputMsgEl.scrollTop = top;
+    }
+  });
+})();
+
+(async () => {
+  await listen<number>("progress", (event) => {
+    console.log(event);
+    if (progressEl) {
+      progressEl.value = event.payload;
+      progressEl.setAttribute("max", "100");
+    }
+  });
+})();
 
 (async () => {
   await listen<WhisperPayload>("whisper", (event) => {
@@ -325,26 +347,16 @@ window.addEventListener("DOMContentLoaded", () => {
           "] 文字起こし中...";
         outputSysEl.scrollTo(0, outputSysEl.scrollHeight);
       }
-      whisper.push(event.payload);
       if (outputMsgEl && callWhisperBtnEl && copyMsgButtonEl) {
         const start = outputMsgEl.selectionStart;
         const end = outputMsgEl.selectionEnd;
         const top = outputMsgEl.scrollTop;
-        outputMsgEl.value = whisper.outputText();
         outputMsgEl.setSelectionRange(start, end);
         outputMsgEl.scrollTop = top;
         copyMsgButtonEl.disabled = false;
       }
       if (progressEl && voiceAudioEl && fromSlider && toSlider) {
-        const all_length_ms =
-          (parseInt(toSlider.value) - parseInt(fromSlider.value)) *
-          voiceAudioEl.duration;
         progressEl.classList.remove("progress-error");
-        progressEl.value =
-          ((event.payload.end_ms -
-            parseInt(fromSlider.value) * voiceAudioEl.duration) /
-            all_length_ms) *
-          100;
         progressEl.setAttribute("max", "100");
       }
     }
