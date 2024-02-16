@@ -26,7 +26,7 @@ pub enum LoadStatus {
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-struct Config {
+pub struct Config {
     status: Status,
     path_wav: PathBuf,
     path_model: PathBuf,
@@ -61,6 +61,11 @@ impl Store {
             model_load_status: LoadStatus::StandBy,
             data: Vec::new(),
         }
+    }
+
+    pub fn set_config(&mut self, app: &tauri::AppHandle, config: Config) {
+        self.config = config;
+        self.emit_config(app);
     }
 
     pub fn set_status(&mut self, app: &tauri::AppHandle, status: Status) {
@@ -152,6 +157,7 @@ impl Store {
     }
 
     fn emit_config(&self, app: &tauri::AppHandle) {
+        dbg!(&self.config);
         app.emit_all("config", self.config.clone()).unwrap();
     }
 

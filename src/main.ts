@@ -72,6 +72,22 @@ window.addEventListener("DOMContentLoaded", () => {
         whisper.end_sec = voiceAudioEl.duration * (to / 1000);
       }
     };
+    fromSlider.onmouseup = () =>
+      refresh_config(
+        "secStart",
+        Math.trunc(
+          (parseInt(fromSlider?.value ?? "0") * (voiceAudioEl?.duration ?? 0)) /
+            1000
+        ).toString()
+      );
+    toSlider.onmouseup = () =>
+      refresh_config(
+        "secEnd",
+        Math.trunc(
+          (parseInt(toSlider?.value ?? "0") * (voiceAudioEl?.duration ?? 0)) /
+            1000
+        ).toString()
+      );
   }
 
   document
@@ -193,6 +209,7 @@ window.addEventListener("DOMContentLoaded", () => {
       const new_path = Array.isArray(path) ? path[0] : path;
       if (new_path && new_path !== voiceInputEl.value) {
         voiceInputEl.value = new_path;
+        refresh_config("pathWav", new_path);
         dualRngSliderEl.classList.add("hidden");
         dualRngSliderEl.classList.remove("flex");
         voiceAudioEl.classList.add("hidden");
@@ -218,8 +235,10 @@ window.addEventListener("DOMContentLoaded", () => {
             });
             voiceAudioEl.src = convertFileSrc(filePath);
             voiceInputEl.value = filePath;
+            refresh_config("pathWav", filePath);
           } else {
             voiceInputEl.value = "";
+            refresh_config("pathWav", "");
             voiceAudioEl.classList.add("hidden");
             dualRngSliderEl.classList.remove("flex");
             dualRngSliderEl.classList.add("hidden");
@@ -237,7 +256,7 @@ window.addEventListener("DOMContentLoaded", () => {
           }
         }
         whisper = new Whisper();
-        whisper.pathToWav = voiceInputEl.value;
+        refresh_config("pathWav", voiceInputEl.value);
         if (outputSysEl && progressEl) {
           outputSysEl.value =
             (outputSysEl.value === "" ? "" : outputSysEl.value + "\n") +
@@ -277,13 +296,16 @@ window.addEventListener("DOMContentLoaded", () => {
         ? path[0]
         : path ?? modelInputEl.value;
       whisper.pathToModel = modelInputEl.value;
+      refresh_config("pathModel", modelInputEl.value);
     }
   });
   langSelectEl?.addEventListener("change", (_) => {
     whisper.lang = langSelectEl?.value ?? "ja";
+    refresh_config("lang", langSelectEl?.value ?? "ja");
   });
   transInputEl?.addEventListener("change", (_) => {
     whisper.translate = transInputEl?.checked ?? false;
+    refresh_config("translate", (transInputEl?.checked ?? false).toString());
   });
   editMsgInputEl?.addEventListener("change", (_) => {
     whisper.clock = !(editMsgInputEl?.checked ?? false);
@@ -298,6 +320,10 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   });
 });
+
+const refresh_config = async (paramName: string, paramData: string) => {
+  await invoke("refresh_config", { paramName, paramData });
+};
 
 (async () => {
   await listen<string>("data", (event) => {
@@ -385,6 +411,10 @@ export type AudioConvPayload = {
       if (event.payload.status === "error") {
         progressEl.classList.add("progress-error");
         progressEl.value = 100;
+        if (voiceInputEl) {
+          voiceInputEl!.value = "";
+        }
+        refresh_config("pathWav", "");
       } else if (event.payload.status === "indeterminate") {
         progressEl.classList.remove("progress-error");
         progressEl.removeAttribute("value");

@@ -2,6 +2,8 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use hound::{SampleFormat, WavSpec};
+use std::path::PathBuf;
+use store::STORE;
 use tauri::Manager;
 
 mod audio_conv;
@@ -61,10 +63,34 @@ async fn whisper(
     .await
 }
 
+#[tauri::command]
+async fn refresh_config(
+    param_name: String,
+    param_data: String,
+    app: tauri::AppHandle,
+) -> Result<(), String> {
+    let mut config = STORE.lock().unwrap();
+    match param_name.as_str() {
+        "pathWav" => config.set_path_wav(&app, PathBuf::from(param_data)),
+        "pathModel" => config.set_path_model(&app, PathBuf::from(param_data)),
+        "lang" => config.set_lang(&app, param_data),
+        "translate" => config.set_translate(&app, param_data.parse().unwrap_or_default()),
+        "secStart" => config.set_sec_start(&app, param_data.parse().unwrap_or_default()),
+        "secEnd" => config.set_sec_end(&app, param_data.parse().unwrap_or_default()),
+        _ => (),
+    }
+    Ok(())
+}
+
 fn main() {
     tracing_subscriber::fmt::init();
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![check_wav, audio_conv, whisper])
+        .invoke_handler(tauri::generate_handler![
+            check_wav,
+            audio_conv,
+            whisper,
+            refresh_config
+        ])
         .setup(|app| {
             #[cfg(debug_assertions)] // only include this code on debug builds
             {
