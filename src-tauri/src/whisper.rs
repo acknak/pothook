@@ -49,7 +49,7 @@ pub async fn run(
     let lang_string;
     {
         let mut config = STORE.lock().unwrap();
-        config.set_status(app, crate::store::Status::Whispering);
+        config.set_status(app, crate::store::WhisperStatus::Whispering);
         config.set_path_wav(app, PathBuf::from(path_wav));
         config.set_path_model(app, PathBuf::from(path_model));
         config.set_lang(app, lang.to_string());

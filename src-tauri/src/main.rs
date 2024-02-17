@@ -70,6 +70,7 @@ async fn refresh_config(
     app: tauri::AppHandle,
 ) -> Result<(), String> {
     let mut config = STORE.lock().unwrap();
+    dbg!(&param_name, &param_data);
     match param_name.as_str() {
         "pathWav" => config.set_path_wav(&app, PathBuf::from(param_data)),
         "pathModel" => config.set_path_model(&app, PathBuf::from(param_data)),

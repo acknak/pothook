@@ -72,22 +72,8 @@ window.addEventListener("DOMContentLoaded", () => {
         whisper.end_sec = voiceAudioEl.duration * (to / 1000);
       }
     };
-    fromSlider.onmouseup = () =>
-      refresh_config(
-        "secStart",
-        Math.trunc(
-          (parseInt(fromSlider?.value ?? "0") * (voiceAudioEl?.duration ?? 0)) /
-            1000
-        ).toString()
-      );
-    toSlider.onmouseup = () =>
-      refresh_config(
-        "secEnd",
-        Math.trunc(
-          (parseInt(toSlider?.value ?? "0") * (voiceAudioEl?.duration ?? 0)) /
-            1000
-        ).toString()
-      );
+    fromSlider.onmouseup = () => config("secRange", "");
+    toSlider.onmouseup = () => config("secRange", "");
   }
 
   document
@@ -208,8 +194,7 @@ window.addEventListener("DOMContentLoaded", () => {
       voiceInputEl.disabled = false;
       const new_path = Array.isArray(path) ? path[0] : path;
       if (new_path && new_path !== voiceInputEl.value) {
-        voiceInputEl.value = new_path;
-        refresh_config("pathWav", new_path);
+        config("pathWav", new_path);
         dualRngSliderEl.classList.add("hidden");
         dualRngSliderEl.classList.remove("flex");
         voiceAudioEl.classList.add("hidden");
@@ -234,11 +219,9 @@ window.addEventListener("DOMContentLoaded", () => {
               pathToWav: filePath,
             });
             voiceAudioEl.src = convertFileSrc(filePath);
-            voiceInputEl.value = filePath;
-            refresh_config("pathWav", filePath);
+            config("pathWav", filePath);
           } else {
-            voiceInputEl.value = "";
-            refresh_config("pathWav", "");
+            config("pathWav", "");
             voiceAudioEl.classList.add("hidden");
             dualRngSliderEl.classList.remove("flex");
             dualRngSliderEl.classList.add("hidden");
@@ -256,7 +239,7 @@ window.addEventListener("DOMContentLoaded", () => {
           }
         }
         whisper = new Whisper();
-        refresh_config("pathWav", voiceInputEl.value);
+        config("pathWav", voiceInputEl.value);
         if (outputSysEl && progressEl) {
           outputSysEl.value =
             (outputSysEl.value === "" ? "" : outputSysEl.value + "\n") +
@@ -292,23 +275,24 @@ window.addEventListener("DOMContentLoaded", () => {
           },
         ],
       });
-      modelInputEl.value = Array.isArray(path)
+      whisper.pathToModel = Array.isArray(path)
         ? path[0]
         : path ?? modelInputEl.value;
-      whisper.pathToModel = modelInputEl.value;
-      refresh_config("pathModel", modelInputEl.value);
+      config(
+        "pathModel",
+        Array.isArray(path) ? path[0] : path ?? modelInputEl.value
+      );
     }
   });
   langSelectEl?.addEventListener("change", (_) => {
-    whisper.lang = langSelectEl?.value ?? "ja";
-    refresh_config("lang", langSelectEl?.value ?? "ja");
+    config("lang", langSelectEl?.value ?? "ja");
   });
   transInputEl?.addEventListener("change", (_) => {
-    whisper.translate = transInputEl?.checked ?? false;
-    refresh_config("translate", (transInputEl?.checked ?? false).toString());
+    config("translate", (transInputEl?.checked ?? false).toString());
   });
   editMsgInputEl?.addEventListener("change", (_) => {
     whisper.clock = !(editMsgInputEl?.checked ?? false);
+    config("displayClock", (!(editMsgInputEl?.checked ?? false)).toString());
     if (outputMsgEl) {
       outputMsgEl.readOnly = whisper.clock || whisper.numOutputs() == 0;
     }
@@ -321,8 +305,50 @@ window.addEventListener("DOMContentLoaded", () => {
   });
 });
 
-const refresh_config = async (paramName: string, paramData: string) => {
-  await invoke("refresh_config", { paramName, paramData });
+const config = async (paramName: string, paramData: string) => {
+  console.debug(paramName, paramData);
+  if (paramName === "pathWav" && voiceInputEl) {
+    voiceInputEl.value = paramData;
+  }
+  if (paramName === "pathModel" && modelInputEl) {
+    modelInputEl.value = paramData;
+  }
+  if (paramName === "displayClock" && editMsgInputEl) {
+    editMsgInputEl.checked = paramData === "false";
+  }
+  if (paramName === "lang" && langSelectEl) {
+    langSelectEl.value = paramData;
+  }
+  if (paramName === "translate" && transInputEl) {
+    transInputEl.checked = paramData === "true";
+  }
+  if (paramName === "secRange") {
+    await invoke("refresh_config", {
+      paramName: "secStart",
+      paramData: Math.trunc(
+        (voiceAudioEl?.duration ?? 0) *
+          (parseInt(fromSlider?.value ?? "") / 1000)
+      ).toString(),
+    });
+    await invoke("refresh_config", {
+      paramName: "secEnd",
+      paramData: Math.trunc(
+        (voiceAudioEl?.duration ?? 0) * (parseInt(toSlider?.value ?? "") / 1000)
+      ).toString(),
+    });
+  } else {
+    await invoke("refresh_config", { paramName, paramData });
+  }
+};
+
+export type ConfigPayload = {
+  pathWav: string;
+  pathModel: string;
+  displayClock: boolean;
+  lang: string;
+  translate: boolean;
+  secStart: number;
+  secEnd: number;
 };
 
 (async () => {
@@ -340,7 +366,6 @@ const refresh_config = async (paramName: string, paramData: string) => {
 
 (async () => {
   await listen<number>("progress", (event) => {
-    console.log(event);
     if (progressEl) {
       progressEl.value = event.payload;
       progressEl.setAttribute("max", "100");
@@ -397,7 +422,6 @@ export type AudioConvPayload = {
 
 (async () => {
   await listen<AudioConvPayload>("audio_conv", (event) => {
-    console.log(event);
     if (outputSysEl && progressEl && voiceAudioEl) {
       if (event.payload.message !== "") {
         outputSysEl.value =
@@ -411,10 +435,7 @@ export type AudioConvPayload = {
       if (event.payload.status === "error") {
         progressEl.classList.add("progress-error");
         progressEl.value = 100;
-        if (voiceInputEl) {
-          voiceInputEl!.value = "";
-        }
-        refresh_config("pathWav", "");
+        config("pathWav", "");
       } else if (event.payload.status === "indeterminate") {
         progressEl.classList.remove("progress-error");
         progressEl.removeAttribute("value");

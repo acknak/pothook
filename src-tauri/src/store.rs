@@ -6,13 +6,14 @@ use tauri::Manager;
 #[derive(Debug)]
 pub struct Store {
     config: Config,
+    whisper_status: WhisperStatus,
     wav_load_status: LoadStatus,
     model_load_status: LoadStatus,
     data: Vec<Data>,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-pub enum Status {
+pub enum WhisperStatus {
     NotReady,
     StandBy,
     Whispering,
@@ -21,13 +22,12 @@ pub enum Status {
 #[derive(Debug)]
 pub enum LoadStatus {
     StandBy,
-    Loading(i64),
+    Loading(u8),
     Loaded,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct Config {
-    status: Status,
     path_wav: PathBuf,
     path_model: PathBuf,
     display_clock: bool,
@@ -48,28 +48,23 @@ impl Store {
     fn new() -> Store {
         Store {
             config: Config {
-                status: Status::NotReady,
-                display_clock: true,
                 path_wav: PathBuf::new(),
                 path_model: PathBuf::new(),
+                display_clock: true,
                 lang: "ja".to_string(),
                 translate: false,
                 sec_start: 0,
                 sec_end: 0,
             },
+            whisper_status: WhisperStatus::NotReady,
             wav_load_status: LoadStatus::StandBy,
             model_load_status: LoadStatus::StandBy,
             data: Vec::new(),
         }
     }
 
-    pub fn set_config(&mut self, app: &tauri::AppHandle, config: Config) {
-        self.config = config;
-        self.emit_config(app);
-    }
-
-    pub fn set_status(&mut self, app: &tauri::AppHandle, status: Status) {
-        self.config.status = status;
+    pub fn set_status(&mut self, app: &tauri::AppHandle, status: WhisperStatus) {
+        self.whisper_status = status;
         self.emit_config(app);
     }
 
@@ -115,6 +110,7 @@ impl Store {
     }
 
     pub fn set_sec_start(&mut self, app: &tauri::AppHandle, sec_start: i32) {
+        dbg!(sec_start);
         self.config.sec_start = sec_start;
         self.emit_config(app);
     }
