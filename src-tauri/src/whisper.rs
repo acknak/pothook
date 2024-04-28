@@ -1,15 +1,15 @@
 use crate::store::STORE;
 use libc::c_void;
 use std::ffi::CStr;
-use std::path::PathBuf;
 use tauri::Manager;
-use whisper_rs::{
-    FullParams, SamplingStrategy, WhisperContext, WhisperContextParameters, WhisperState,
-};
+use tracing::info;
+use whisper_rs::{FullParams, SamplingStrategy, WhisperContext, WhisperContextParameters};
 
 #[derive(Clone, serde::Serialize, Debug)]
 struct WhisperPayload {
     status: String,
+    start_ms: i64,
+    end_ms: i64,
     message: String,
 }
 
@@ -24,25 +24,23 @@ unsafe extern "C" fn whisper_callback(
     if ret.is_null() {
         return;
     }
+    let payload = WhisperPayload {
+        status: "progress".to_string(),
+        start_ms: unsafe {
+            whisper_rs_sys::whisper_full_get_segment_t0_from_state(ptr, i_segment) * 10
+        },
+        end_ms: unsafe {
+            whisper_rs_sys::whisper_full_get_segment_t1_from_state(ptr, i_segment) * 10
+        },
+        message: unsafe { CStr::from_ptr(ret) }.to_str().unwrap().to_string(),
+    };
+    info!(?payload);
     let box_app = Box::from_raw(app as *mut tauri::AppHandle);
-    STORE.lock().unwrap().push_data(
-        &box_app,
-        whisper_rs_sys::whisper_full_get_segment_t0_from_state(ptr, i_segment) * 10,
-        whisper_rs_sys::whisper_full_get_segment_t1_from_state(ptr, i_segment) * 10,
-        unsafe { CStr::from_ptr(ret) }.to_str().unwrap().to_string(),
-    );
+    box_app.emit_all("whisper", payload).unwrap();
     _ = Box::into_raw(box_app);
 }
 
-pub async fn run(
-    path_wav: &str,
-    path_model: &str,
-    lang: &str,
-    translate: bool,
-    offset_ms: i32,
-    duration_ms: i32,
-    app: &tauri::AppHandle,
-) -> Result<(), String> {
+pub async fn run(app: &tauri::AppHandle) -> Result<(), String> {
     let mut params = FullParams::new(SamplingStrategy::Greedy { best_of: 1 });
     let context;
     let audio_data;
@@ -50,12 +48,6 @@ pub async fn run(
     {
         let mut config = STORE.lock().unwrap();
         config.set_status(app, crate::store::Status::Whispering);
-        config.set_path_wav(app, PathBuf::from(path_wav));
-        config.set_path_model(app, PathBuf::from(path_model));
-        config.set_lang(app, lang.to_string());
-        config.set_translate(app, translate);
-        config.set_sec_start(app, offset_ms / 1000);
-        config.set_sec_end(app, (offset_ms + duration_ms) / 1000);
 
         let mut reader = hound::WavReader::open(config.get_path_wav()).unwrap();
         audio_data = reader
@@ -91,6 +83,8 @@ pub async fn run(
         "whisper",
         WhisperPayload {
             status: "start".to_string(),
+            start_ms: 0,
+            end_ms: 0,
             message: "初期化が完了しました。文字起こしを開始します。".to_string(),
         },
     )
@@ -106,6 +100,8 @@ fn emit_err(app: &tauri::AppHandle, msg: &str) -> String {
         "whisper",
         WhisperPayload {
             status: "error".to_string(),
+            start_ms: 0,
+            end_ms: 0,
             message: msg.to_string(),
         },
     );

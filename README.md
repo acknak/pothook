@@ -30,6 +30,8 @@ Pothook is a cross-platform desktop app that lets you chat securely and anonymou
 
 Then, clone the repository and build the app with the following commands.
 
+Hint: See whisper-rs [BUILDING.md](https://github.com/tazz4843/whisper-rs/blob/master/BUILDING.md) for instructions for building whisper-rs on Windows and OSX M1. Linux builds should just work out of the box. :book:
+
 ```
 git clone https://github.com/acknak/pothook.git
 cd pothook

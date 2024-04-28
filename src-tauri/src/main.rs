@@ -42,25 +42,8 @@ async fn audio_conv(
 }
 
 #[tauri::command]
-async fn whisper(
-    path_to_wav: &str,
-    path_to_model: &str,
-    lang: &str,
-    translate: bool,
-    offset_ms: i32,
-    duration_ms: i32,
-    app: tauri::AppHandle,
-) -> Result<(), String> {
-    whisper::run(
-        path_to_wav,
-        path_to_model,
-        lang,
-        translate,
-        offset_ms,
-        duration_ms,
-        &app,
-    )
-    .await
+async fn whisper(app: tauri::AppHandle) -> Result<(), String> {
+    whisper::run(&app).await
 }
 
 #[tauri::command]

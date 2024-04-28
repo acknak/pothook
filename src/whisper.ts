@@ -18,16 +18,7 @@ export class Whisper {
   public end_sec: number = 0;
 
   public async callWhisper(): Promise<boolean> {
-    const offsetMs = Math.trunc(this.start_sec * 1000);
-    const durationMs = Math.trunc((this.end_sec - this.start_sec) * 1000);
-    await invoke("whisper", {
-      pathToWav: this.pathToWav,
-      pathToModel: this.pathToModel,
-      lang: this.lang,
-      translate: this.translate,
-      offsetMs,
-      durationMs,
-    });
+    await invoke("whisper", {});
     return true;
   }
   public editOutputs(outputText: string) {
@@ -36,6 +27,18 @@ export class Whisper {
         this.outputs[index].message = message;
       }
     });
+  }
+  public strOutputs(): string {
+    return this.outputs.reduce(
+      (rawOutputs, v) =>
+        (rawOutputs =
+          (rawOutputs === "" ? "" : rawOutputs + "\n") +
+          (this.clock ? this.formatOutputText(v) : v.message)),
+      ""
+    );
+  }
+  public pushOutputs(wp: WhisperPayload) {
+    this.outputs.push(wp);
   }
   public numOutputs(): number {
     return this.outputs.length;
@@ -50,4 +53,24 @@ export class Whisper {
       ? this.outputs[index].end_ms
       : 0;
   }
+
+  private formatOutputText(payload: WhisperPayload): String {
+    return (
+      (this.clock
+        ? `[${getTimestamp(payload.start_ms)} --> ${getTimestamp(payload.end_ms)}]  `
+        : "") + payload.message
+    );
+  }
+}
+
+function getTimestamp(ms: number): String {
+  return (
+    String(Math.floor(ms / 3600000)).padStart(2, "0") +
+    ":" +
+    String(Math.floor((ms % 3600000) / 60000)).padStart(2, "0") +
+    ":" +
+    String(Math.floor((ms % 60000) / 1000)).padStart(2, "0") +
+    "." +
+    String(Math.floor(ms % 1000)).padStart(3, "0")
+  );
 }

@@ -8,7 +8,7 @@
   },
   "package": {
     "productName": "Pothook",
-    "version": "0.1.2"
+    "version": "0.1.3"
   },
   "tauri": {
     "allowlist": {
@@ -55,7 +55,7 @@
         "resizable": true,
         "title": "Pothook",
         "width": 1056,
-        "height": 675
+        "height": 594
       }
     ]
   }

@@ -134,6 +134,9 @@ window.addEventListener("DOMContentLoaded", () => {
             "[" +
             new Date().toLocaleString("ja-JP") +
             "] 文字起こしが完了しました";
+          progressEl.classList.remove("progress-error");
+          progressEl.setAttribute("max", "100");
+          progressEl.value = 100;
           outputSysEl.scrollTo(0, outputSysEl.scrollHeight);
           callWhisperBtnEl.disabled = false;
         }
@@ -226,6 +229,9 @@ window.addEventListener("DOMContentLoaded", () => {
             )
           ) {
             let filePath = await save({
+              defaultPath:
+                voiceInputEl.value.split("/").reverse()[0].split(".")[0] +
+                ".wav",
               filters: [{ name: "voices", extensions: ["wav"] }],
             });
             if (!filePath) return;
@@ -308,9 +314,13 @@ window.addEventListener("DOMContentLoaded", () => {
     refresh_config("translate", (transInputEl?.checked ?? false).toString());
   });
   editMsgInputEl?.addEventListener("change", (_) => {
-    whisper.clock = !(editMsgInputEl?.checked ?? false);
     if (outputMsgEl) {
-      outputMsgEl.readOnly = whisper.clock || whisper.numOutputs() == 0;
+      if (!whisper.clock) {
+        whisper.editOutputs(outputMsgEl.value);
+      }
+      whisper.clock = !(editMsgInputEl?.checked ?? false);
+      outputMsgEl.readOnly = whisper.clock || whisper.numOutputs() === 0;
+      outputMsgEl.value = whisper.strOutputs();
     }
   });
   copyMsgButtonEl?.addEventListener("click", (e) => {
@@ -324,29 +334,6 @@ window.addEventListener("DOMContentLoaded", () => {
 const refresh_config = async (paramName: string, paramData: string) => {
   await invoke("refresh_config", { paramName, paramData });
 };
-
-(async () => {
-  await listen<string>("data", (event) => {
-    if (outputMsgEl) {
-      const start = outputMsgEl.selectionStart;
-      const end = outputMsgEl.selectionEnd;
-      const top = outputMsgEl.scrollTop;
-      outputMsgEl.value = event.payload;
-      outputMsgEl.setSelectionRange(start, end);
-      outputMsgEl.scrollTop = top;
-    }
-  });
-})();
-
-(async () => {
-  await listen<number>("progress", (event) => {
-    console.log(event);
-    if (progressEl) {
-      progressEl.value = event.payload;
-      progressEl.setAttribute("max", "100");
-    }
-  });
-})();
 
 (async () => {
   await listen<WhisperPayload>("whisper", (event) => {
@@ -373,17 +360,26 @@ const refresh_config = async (paramName: string, paramData: string) => {
           "] 文字起こし中...";
         outputSysEl.scrollTo(0, outputSysEl.scrollHeight);
       }
+      whisper.pushOutputs(event.payload);
       if (outputMsgEl && callWhisperBtnEl && copyMsgButtonEl) {
         const start = outputMsgEl.selectionStart;
         const end = outputMsgEl.selectionEnd;
         const top = outputMsgEl.scrollTop;
         outputMsgEl.setSelectionRange(start, end);
         outputMsgEl.scrollTop = top;
+        outputMsgEl.value = whisper.strOutputs();
         copyMsgButtonEl.disabled = false;
       }
       if (progressEl && voiceAudioEl && fromSlider && toSlider) {
         progressEl.classList.remove("progress-error");
         progressEl.setAttribute("max", "100");
+        const progress_sec = event.payload.end_ms / 1000.0;
+        const end_sec =
+          whisper.start_sec >= whisper.end_sec
+            ? voiceAudioEl.duration
+            : whisper.end_sec;
+        progressEl.value =
+          ((progress_sec - whisper.start_sec) / (end_sec - progress_sec)) * 100;
       }
     }
   });
@@ -397,7 +393,6 @@ export type AudioConvPayload = {
 
 (async () => {
   await listen<AudioConvPayload>("audio_conv", (event) => {
-    console.log(event);
     if (outputSysEl && progressEl && voiceAudioEl) {
       if (event.payload.message !== "") {
         outputSysEl.value =
